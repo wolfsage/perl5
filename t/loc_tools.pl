@@ -142,6 +142,8 @@ sub _trylocale ($$$$) { # For use only by other functions in this file!
     my $has_ctype = 0;
     my $has_all = 0;
     my $has_collate = 0;
+    use Data::Dumper;
+    #print STDERR __FILE__, ": ", __LINE__, ": ", Dumper \%category_number, \%category_name, $categories;
     foreach my $category (@$categories) {
         die "category '$category' must instead be a number"
                                             unless $category =~ / ^ -? \d+ $ /x;
@@ -211,13 +213,13 @@ sub valid_locale_categories() {
 sub locales_enabled(;$) {
     # If no parameter is specified, the function returns 1 if there is any
     # "safe" locale handling available to the caller; otherwise 0.  Safeness
-    # is defined here as the caller operating in the main thread of a program,
+    # XXX is defined here as the caller operating in the main thread of a program,
     # or if threaded locales are safe on the platform and Configured to be
     # used.  This sub is used for testing purposes, and for those, this
     # definition of safety is sufficient, and necessary to get some tests to
     # run on certain configurations on certain platforms.  But beware that the
     # main thread can change the locale of any subthreads unless
-    # ${^SAFE_LOCALES} is non-zero.
+    # XXX ${^SAFE_LOCALES} is non-zero.
     #
     # Use the optional parameter to discover if a particular category or
     # categories are available on the system.  1 is returned if the global
@@ -246,13 +248,8 @@ sub locales_enabled(;$) {
     # normally would be available
     return 0 if ! defined &DynaLoader::boot_DynaLoader;
 
-    # Don't test locales where they aren't safe.  On systems with unsafe
-    # threads, for the purposes of testing, we consider the main thread safe,
-    # and all other threads unsafe.
-    if (! ${^SAFE_LOCALES}) {
-        require threads;
-        return 0 if threads->tid() != 0;
-    }
+    # Don't test locales where they aren't at all safe.
+    return 0 if $Config{ccflags} =~ /\bD?NO_THREAD_SAFE_LOCALE_EMULATION\b/;
 
     # If no setlocale, we need the POSIX 2008 alternatives
     if (! $Config{d_setlocale}) {
@@ -365,8 +362,13 @@ sub find_locales ($;$) {
     my $input_categories = shift;
     my $allow_incompatible = shift // 0;
 
-    my @categories = (ref $input_categories) ? $input_categories->@* : $input_categories;
+    my @categories = (ref $input_categories)
+                      ? $input_categories->@*
+                      : $input_categories;
+    use Data::Dumper;
+    #print STDERR __FILE__, ": ", __LINE__, ": ", "finding\n", Dumper \@categories;
     return unless locales_enabled(\@categories);
+    #print STDERR __FILE__, ": ", __LINE__, ": ", "enabled, (allow incompat=$allow_incompatible)\n";
 
     # Note, the subroutine call above converts the $categories into a form
     # suitable for _trylocale().
@@ -396,6 +398,7 @@ sub find_locales ($;$) {
     return sort @Locale if defined $Config{d_setlocale_accepts_any_locale_name};
 
     foreach (1..16) {
+        #print STDERR __FILE__, ": ", __LINE__, ": ", "foreach\n";
         _trylocale("ISO8859-$_", \@categories, \@Locale, $allow_incompatible);
         _trylocale("iso8859$_", \@categories, \@Locale, $allow_incompatible);
         _trylocale("iso8859-$_", \@categories, \@Locale, $allow_incompatible);
@@ -423,9 +426,11 @@ sub find_locales ($;$) {
             # locales will cause all IO hadles to default to (assume) utf8
             next unless utf8::valid($_);
             chomp;
+            #print STDERR __FILE__, ": ", __LINE__, ": ", "trying $_\n";
             _trylocale($_, \@categories, \@Locale, $allow_incompatible);
         }
         close(LOCALES);
+            #print STDERR __FILE__, ": ", __LINE__, ": ", "done \n";
     } elsif ($^O eq 'VMS'
              && defined($ENV{'SYS$I18N_LOCALE'})
              && -d 'SYS$I18N_LOCALE')
