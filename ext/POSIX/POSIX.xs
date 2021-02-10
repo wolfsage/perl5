@@ -3390,30 +3390,18 @@ mblen(s, n = ~0)
     OUTPUT:
         RETVAL
 
-#if defined(HAS_MBRTOWC) && (defined(USE_ITHREADS) || ! defined(HAS_MBTOWC))
-#  define USE_MBRTOWC
-#else
-#  undef USE_MBRTOWC
-#endif
-
 int
 mbtowc(pwc, s, n = ~0)
 	SV *	        pwc
 	SV *		s
 	size_t		n
     CODE:
+        RETVAL = -1;
+#if defined(HAS_MBTOWC) || defined(HAS_MBRTOWC)
         errno = 0;
         SvGETMAGIC(s);
         if (! SvOK(s)) { /* Initialize state */
-#ifdef USE_MBRTOWC
-            /* Initialize the shift state to all zeros in PL_mbrtowc_ps. */
-            memzero(&PL_mbrtowc_ps, sizeof(PL_mbrtowc_ps));
-            RETVAL = 0;
-#else
-            MBTOWC_LOCK;
-            RETVAL = mbtowc(NULL, NULL, 0);
-            MBTOWC_UNLOCK;
-#endif
+            mbtowc_(NULL, NULL, 0);
         }
         else {  /* Not resetting state */
             wchar_t wc;
@@ -3426,15 +3414,7 @@ mbtowc(pwc, s, n = ~0)
                 size_t len;
                 char * string = SvPV(byte_s, len);
                 if (n < len) len = n;
-#ifdef USE_MBRTOWC
-                RETVAL = (SSize_t) mbrtowc(&wc, string, len, &PL_mbrtowc_ps);
-#else
-                /* Locking prevents races, but locales can be switched out
-                 * without locking, so this isn't a cure all */
-                MBTOWC_LOCK;
-                RETVAL = mbtowc(&wc, string, len);
-                MBTOWC_UNLOCK;
-#endif
+                RETVAL = Perl_mbtowc_(aTHX_ &wc, string, len);
                 if (RETVAL >= 0) {
                     sv_setiv_mg(pwc, wc);
                 }
@@ -3443,6 +3423,7 @@ mbtowc(pwc, s, n = ~0)
                 }
             }
         }
+#endif
     OUTPUT:
         RETVAL
 

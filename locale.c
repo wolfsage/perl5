@@ -2355,6 +2355,67 @@ S_save_to_buffer(const char * string, char **buf, Size_t *buf_size, const Size_t
     return *buf;
 }
 
+int
+Perl_mbtowc_(pTHX_ const wchar_t * pwc, const char * s, const Size_t len)
+{
+
+#if ! defined(HAS_MBRTOWC) && ! defined(HAS_MBTOWC)
+
+    PERL_UNUSED_ARG(pwc);
+    PERL_UNUSED_ARG(s);
+    PERL_UNUSED_ARG(len);
+    return -1;
+
+#else
+
+    int retval = -1;
+
+    if (s == NULL) { /* Initialize the shift state to all zeros in
+                        PL_mbrtowc_ps. */
+
+#  if defined(HAS_MBRTOWC) && defined(USE_ITHREADS)
+
+        memzero(&PL_mbrtowc_ps, sizeof(PL_mbrtowc_ps));
+        return 0;
+
+#  elif defined(HAS_MBTOWC)
+
+        MBTOWC_LOCK_;
+        SETERRNO(0, 0);
+        retval = mbtowc(NULL, NULL, 0);
+        MBTOWC_UNLOCK_;
+        return retval;
+
+#  else
+#    error Unexpected Configuration
+#  endif
+
+    }
+
+#  if defined(HAS_MBRTOWC) && defined(USE_ITHREADS)
+
+    SETERRNO(0, 0);
+    retval = (SSize_t) mbrtowc((wchar_t *) pwc, s, len, &PL_mbrtowc_ps);
+
+#  elif defined(HAS_MBTOWC)
+
+    /* Locking prevents races, but locales can be switched out without locking,
+     * so this isn't a cure all */
+    MBTOWC_LOCK_;
+    SETERRNO(0, 0);
+    retval = mbtowc((wchar_t *) pwc, s, len);
+    MBTOWC_UNLOCK_;
+
+#  else
+#    error Unexpected Configuration
+#  endif
+
+    return retval;
+
+#endif
+
+}
+
 /*
 
 =for apidoc Perl_langinfo
