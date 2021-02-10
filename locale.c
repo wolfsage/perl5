@@ -2380,10 +2380,10 @@ Perl_mbtowc_(pTHX_ const wchar_t * pwc, const char * s, const Size_t len)
 
 #  elif defined(HAS_MBTOWC)
 
-        MBTOWC_LOCK_;
+        MBTOWC_LOCK;
         SETERRNO(0, 0);
         retval = mbtowc(NULL, NULL, 0);
-        MBTOWC_UNLOCK_;
+        MBTOWC_UNLOCK;
         return retval;
 
 #  else
@@ -2401,10 +2401,10 @@ Perl_mbtowc_(pTHX_ const wchar_t * pwc, const char * s, const Size_t len)
 
     /* Locking prevents races, but locales can be switched out without locking,
      * so this isn't a cure all */
-    MBTOWC_LOCK_;
+    MBTOWC_LOCK;
     SETERRNO(0, 0);
     retval = mbtowc((wchar_t *) pwc, s, len);
-    MBTOWC_UNLOCK_;
+    MBTOWC_UNLOCK;
 
 #  else
 #    error Unexpected Configuration
