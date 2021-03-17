@@ -216,10 +216,12 @@ This program is distributed under the Artistic License.
 =cut
 
 
-my $Podroot;
+my $Podroot;  # TODO: This is still being invoked inside _save_pages(), even though it's never set -- which casts doubt on what _save_pages() is doing!
 
 my %Pages = ();                 # associative array used to find the location
                                 #   of pages referenced by L<> links.
+                                # TODO:  This, too, is being invoked inside
+                                # _save_pages() and load_cache()
 
 sub pod2html {
     local(@ARGV) = @_;
