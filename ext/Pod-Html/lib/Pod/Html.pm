@@ -216,13 +216,6 @@ This program is distributed under the Artistic License.
 =cut
 
 
-my $Podroot;  # TODO: This is still being invoked inside _save_pages(), even though it's never set -- which casts doubt on what _save_pages() is doing!
-
-#my %Pages = ();                 # associative array used to find the location
-                                #   of pages referenced by L<> links.
-                                # TODO:  This, too, is being invoked inside
-                                # _save_pages() and load_cache()
-
 sub new {
     my $class = shift;
     return bless {}, $class;
@@ -246,6 +239,7 @@ sub pod2html {
         #%Pages = $self->generate_cache(\%Pages);
         $self->generate_cache($self->{Pages});
     }
+
     my $input   = $self->identify_input();
     my $podtree = $self->parse_input_for_podtree($input);
     $self->set_Title_from_podtree($podtree);
@@ -261,7 +255,6 @@ sub pod2html {
     $parser->htmlroot($self->{Htmlroot});
     $parser->index($self->{Doindex});
     $parser->output_string(\$self->{output}); # written to file later
-    #$parser->pages(\%Pages);
     $parser->pages($self->{Pages});
     $parser->quiet($self->{Quiet});
     $parser->verbose($self->{Verbose});
@@ -358,12 +351,10 @@ sub refine_globals {
         # Is the above not just "$self->{Htmlfileurl} = $self->{Htmlfile}"?
         $self->{Htmlfileurl} = unixify($self->{Htmlfile});
     }
-    #return $self;
-    return { %{$self} };
+    return $self;
 }
 
 sub generate_cache {
-    #my ($self, $Pagesref) = @_;
     my $self = shift;
     my $pwd = getcwd();
     chdir($self->{Podroot}) ||
@@ -381,7 +372,7 @@ sub generate_cache {
         ->recurse($self->{Recurse})->survey(@{$self->{Podpath}});
     # remove Podroot and extension from each file
     for my $k (keys %{$name2path}) {
-        $self->{Pages}{$k} = _transform($self, $name2path->{$k});
+        $self->{Pages}{$k} = _transform($self->{Podroot}, $name2path->{$k});
     }
 
     chdir($pwd) || die "$0: error changing to directory $pwd: $!\n";
@@ -405,15 +396,14 @@ sub generate_cache {
         print $cache "$key $self->{Pages}->{$key}\n";
     }
     close $cache or die "error closing $self->{Dircache}: $!";
-    #return %{$Pagesref};
 }
 
 sub _transform {
-    my ($self, $v) = @_;
-    $v = $self->{Podroot} eq File::Spec->curdir
+    my ($Podroot, $v) = @_;
+    $v = $Podroot eq File::Spec->curdir
                ? File::Spec->abs2rel($v)
                : File::Spec->abs2rel($v,
-                                     File::Spec->canonpath($self->{Podroot}));
+                                     File::Spec->canonpath($Podroot));
 
     # Convert path to unix style path
     $v = unixify($v);
