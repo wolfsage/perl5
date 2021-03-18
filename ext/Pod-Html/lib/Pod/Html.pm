@@ -251,7 +251,6 @@ sub pod2html {
 
     # set options for the HTML generator
     my $parser = Pod::Simple::XHTML::LocalPodLinks->new();
-    my $output;
     $parser->codes_in_verbatim(0);
     $parser->anchor_items(1); # the old Pod::Html always did
     $parser->backlink($self->{Backlink}); # linkify =head1 directives
@@ -260,14 +259,14 @@ sub pod2html {
     $parser->htmlfileurl($self->{Htmlfileurl});
     $parser->htmlroot($self->{Htmlroot});
     $parser->index($self->{Doindex});
-    $parser->output_string(\$output); # written to file later
+    $parser->output_string(\$self->{output}); # written to file later
     $parser->pages(\%Pages);
     $parser->quiet($self->{Quiet});
     $parser->verbose($self->{Verbose});
 
     $parser = $self->refine_parser($parser);
     $self->feed_tree_to_parser($parser, $podtree);
-    $self->write_file($output);
+    $self->write_file();
 }
 
 sub init_globals {
@@ -609,7 +608,7 @@ sub feed_tree_to_parser {
 }
 
 sub write_file {
-    my ($self, $output) = @_;
+    my $self = shift;
     $self->{Htmlfile} = "-" unless $self->{Htmlfile}; # stdout
     my $FHOUT;
     if($self->{Htmlfile} and $self->{Htmlfile} ne '-') {
@@ -619,7 +618,7 @@ sub write_file {
         open $FHOUT, ">-";
     }
     binmode $FHOUT, ":utf8";
-    print $FHOUT $output;
+    print $FHOUT $self->{output};
     close $FHOUT or die "Failed to close $self->{Htmlfile}: $!";
     chmod 0644, $self->{Htmlfile} unless $self->{Htmlfile} eq '-';
 }
