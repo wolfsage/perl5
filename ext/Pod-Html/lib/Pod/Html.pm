@@ -226,7 +226,7 @@ sub pod2html {
     local $_;
 
     my $self = Pod::Html->new();
-    $self->init_globals();
+    $self->initialize();
 
     my $opts = process_command_line;
     $self->process_options($opts);
@@ -264,7 +264,7 @@ sub pod2html {
     $self->write_file();
 }
 
-sub init_globals {
+sub initialize {
     my $self = shift;
     $self->{Cachedir} = ".";            # The directory to which directory caches
                                         #   will be written.
