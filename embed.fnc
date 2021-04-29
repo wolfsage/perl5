@@ -3265,18 +3265,19 @@ S	|const char*|my_langinfo_i|const int item			\
 S	|HV *	|get_nl_item_from_localeconv				\
 				|NN const struct lconv *lcbuf		\
                                 |const int item				\
-                                |const int unused
+                                |const int locale_is_utf8
 #      endif
 #  endif
 ST	|const char *|save_to_buffer|NULLOK const char * string	\
 				    |NULLOK const char **buf	\
 				    |NULLOK Size_t *buf_size
-:#    ifndef HAS_POSIX_2008_LOCALE
+#    ifndef HAS_POSIX_2008_LOCALE
 S	|const char*|stdize_locale|const int category			\
 				|NULLOK const char* input_locale	\
 				|NULLOK const char **buf		\
-				|NULLOK Size_t *buf_size
-:#    endif
+				|NULLOK Size_t *buf_size		\
+				|line_t caller_line
+#    endif
 #    ifdef USE_QUERYLOCALE
 S	|const char *|calculate_LC_ALL|const locale_t cur_obj
 #    else
@@ -3329,8 +3330,9 @@ S	|void	|less_dicey_void_setlocale_i				\
 #    endif
 #    ifdef WIN32
 S	|char*	|win32_setlocale|int category|NULLOK const char* locale
-pTC	|wchar_t *|Win_utf8_string_to_wstring|NULLOK const char * utf8_string
-pTC	|char *	|Win_wstring_to_utf8_string|NULLOK const wchar_t * wstring
+ST	|wchar_t *|Win_byte_string_to_wstring|UINT code_page		\
+				|NULLOK const char * byte_string
+ST	|char *	|Win_wstring_to_utf8_string|NULLOK const wchar_t * wstring
 #    endif
 #    ifdef DEBUGGING
 S	|void	|print_collxfrm_input_and_return		\

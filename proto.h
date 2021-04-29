@@ -4238,7 +4238,7 @@ PERL_CALLCONV const char*	Perl_langinfo8(const int item, int * utf8ness);
 #  if (defined(HAS_LOCALECONV) || defined(HAS_LOCALECONV_L))	       && (defined(USE_LOCALE_MONETARY) || defined(USE_LOCALE_NUMERIC))
 #    if defined(PERL_IN_LOCALE_C)
 #      if defined(USE_LOCALE)
-STATIC HV *	S_get_nl_item_from_localeconv(pTHX_ const struct lconv *lcbuf, const int item, const int unused);
+STATIC HV *	S_get_nl_item_from_localeconv(pTHX_ const struct lconv *lcbuf, const int item, const int locale_is_utf8);
 #define PERL_ARGS_ASSERT_GET_NL_ITEM_FROM_LOCALECONV	\
 	assert(lcbuf)
 #      endif
@@ -4326,6 +4326,14 @@ PERL_CALLCONV int	Perl_my_mkostemp(char *templte, int flags);
 PERL_CALLCONV int	Perl_my_mkstemp(char *templte);
 #define PERL_ARGS_ASSERT_MY_MKSTEMP	\
 	assert(templte)
+#endif
+#if !defined(HAS_POSIX_2008_LOCALE)
+#  if defined(PERL_IN_LOCALE_C)
+#    if defined(USE_LOCALE)
+STATIC const char*	S_stdize_locale(pTHX_ const int category, const char* input_locale, const char **buf, Size_t *buf_size, line_t caller_line);
+#define PERL_ARGS_ASSERT_STDIZE_LOCALE
+#    endif
+#  endif
 #endif
 #if !defined(HAS_RENAME)
 PERL_CALLCONV I32	Perl_same_dirent(pTHX_ const char* a, const char* b);
@@ -5216,8 +5224,6 @@ PERL_STATIC_NO_RET void	S_setlocale_failure_panic_i(pTHX_ const unsigned int cat
 #define PERL_ARGS_ASSERT_SETLOCALE_FAILURE_PANIC_I	\
 	assert(failed)
 
-STATIC const char*	S_stdize_locale(pTHX_ const int category, const char* input_locale, const char **buf, Size_t *buf_size);
-#define PERL_ARGS_ASSERT_STDIZE_LOCALE
 STATIC const char *	S_toggle_locale_i(pTHX_ const unsigned switch_cat_index, const char * new_locale);
 #define PERL_ARGS_ASSERT_TOGGLE_LOCALE_I	\
 	assert(new_locale)
@@ -5242,9 +5248,9 @@ STATIC const char *	S_calculate_LC_ALL(pTHX_ const locale_t cur_obj);
 #define PERL_ARGS_ASSERT_CALCULATE_LC_ALL
 #    endif
 #    if defined(WIN32)
-PERL_CALLCONV wchar_t *	Perl_Win_utf8_string_to_wstring(const char * utf8_string);
-#define PERL_ARGS_ASSERT_WIN_UTF8_STRING_TO_WSTRING
-PERL_CALLCONV char *	Perl_Win_wstring_to_utf8_string(const wchar_t * wstring);
+STATIC wchar_t *	S_Win_byte_string_to_wstring(UINT code_page, const char * byte_string);
+#define PERL_ARGS_ASSERT_WIN_BYTE_STRING_TO_WSTRING
+STATIC char *	S_Win_wstring_to_utf8_string(const wchar_t * wstring);
 #define PERL_ARGS_ASSERT_WIN_WSTRING_TO_UTF8_STRING
 STATIC char*	S_win32_setlocale(pTHX_ int category, const char* locale);
 #define PERL_ARGS_ASSERT_WIN32_SETLOCALE

@@ -864,14 +864,6 @@
 #define warn_nocontext		Perl_warn_nocontext
 #define warner_nocontext	Perl_warner_nocontext
 #endif
-#if defined(PERL_IN_LOCALE_C)
-#  if defined(USE_LOCALE)
-#    if defined(WIN32)
-#define Win_utf8_string_to_wstring	Perl_Win_utf8_string_to_wstring
-#define Win_wstring_to_utf8_string	Perl_Win_wstring_to_utf8_string
-#    endif
-#  endif
-#endif
 #if defined(PERL_USE_3ARG_SIGHANDLER)
 #define csighandler		Perl_csighandler
 #endif
@@ -1555,6 +1547,13 @@
 #define dooneliner(a,b)		S_dooneliner(aTHX_ a,b)
 #    endif
 #  endif
+#  if !defined(HAS_POSIX_2008_LOCALE)
+#    if defined(PERL_IN_LOCALE_C)
+#      if defined(USE_LOCALE)
+#define stdize_locale(a,b,c,d,e)	S_stdize_locale(aTHX_ a,b,c,d,e)
+#      endif
+#    endif
+#  endif
 #  if !defined(HAS_RENAME)
 #define same_dirent(a,b)	Perl_same_dirent(aTHX_ a,b)
 #  endif
@@ -1752,7 +1751,6 @@
 #define restore_toggled_locale_i(a,b)	S_restore_toggled_locale_i(aTHX_ a,b)
 #define save_to_buffer		S_save_to_buffer
 #define setlocale_failure_panic_i(a,b,c,d,e)	S_setlocale_failure_panic_i(aTHX_ a,b,c,d,e)
-#define stdize_locale(a,b,c,d)	S_stdize_locale(aTHX_ a,b,c,d)
 #define toggle_locale_i(a,b)	S_toggle_locale_i(aTHX_ a,b)
 #      if defined(USE_POSIX_2008_LOCALE)
 #define emulate_setlocale_i(a,b,c,d)	S_emulate_setlocale_i(aTHX_ a,b,c,d)
@@ -1766,6 +1764,8 @@
 #define calculate_LC_ALL(a)	S_calculate_LC_ALL(aTHX_ a)
 #      endif
 #      if defined(WIN32)
+#define Win_byte_string_to_wstring	S_Win_byte_string_to_wstring
+#define Win_wstring_to_utf8_string	S_Win_wstring_to_utf8_string
 #define win32_setlocale(a,b)	S_win32_setlocale(aTHX_ a,b)
 #      endif
 #    endif

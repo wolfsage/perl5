@@ -852,6 +852,7 @@ Perl_sv_string_from_errnum(pTHX_ int errnum, SV *tgtsv)
     errstr = my_strerror(errnum, &utf8ness);
     if(errstr) {
         sv_setpv(tgtsv, errstr);
+        Safefree(errstr);
         if (utf8ness > 1) {
             SvUTF8_on(tgtsv);
         }
@@ -930,26 +931,34 @@ Perl_magic_get(pTHX_ SV *sv, MAGIC *mg)
         }
 #elif defined(OS2)
         {
-            int utf8ness;
+            if (!(_emx_env & 0x200)) {	/* Under DOS */
+                sv_setnv(sv, (NV)errno);
+                if (errno) {
+                    int utf8ness;
+                    const char * errstr = my_strerror(errnum, &utf8ness);
 
-        if (!(_emx_env & 0x200)) {	/* Under DOS */
-            sv_setnv(sv, (NV)errno);
-            sv_setpv(sv, errno ? my_strerror(errnum, &utf8ness) : "");
-        } else {
-            if (errno != errno_isOS2) {
-                const int tmp = _syserrno();
-                if (tmp)	/* 2nd call to _syserrno() makes it 0 */
-                    Perl_rc = tmp;
+                    sv_setpv(sv, errstr);
+                    Safefree(errstr);
+
+                    if (utf8ness > 1) {
+                        SvUTF8_on(sv);
+                    }
+                }
+                else {
+                    sv_setpvs(sv, "");
+                }
+            } else {
+                if (errno != errno_isOS2) {
+                    const int tmp = _syserrno();
+                    if (tmp)	/* 2nd call to _syserrno() makes it 0 */
+                        Perl_rc = tmp;
+                }
+                sv_setnv(sv, (NV)Perl_rc);
+                sv_setpv(sv, os2error(Perl_rc));
             }
-            sv_setnv(sv, (NV)Perl_rc);
-            sv_setpv(sv, os2error(Perl_rc));
-        }
-        if (SvOK(sv) && strNE(SvPVX(sv), "")) {
-            if (utf8ness > 1) {
-                SvUTF8_on(sv);
+            if (SvOK(sv) && strNE(SvPVX(sv), "")) {
+                fixup_errno_string(sv);
             }
-            fixup_errno_string(sv);
-        }
         }
 #   elif defined(WIN32)
         {
