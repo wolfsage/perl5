@@ -617,14 +617,6 @@ sub write_file {
     chmod 0644, $self->{Htmlfile} unless $self->{Htmlfile} eq '-';
 }
 
-#sub compare {
-#    my ($ha, $hb) = @_;
-#    local $Data::Dumper::Terse  = 1;
-#    local $Data::Dumper::Indent = 0;
-#    local $Data::Dumper::Sortkeys = 1;
-#    return (Dumper($ha) eq Dumper($hb)) ? 1 : 0;
-#}
-
 package Pod::Simple::XHTML::LocalPodLinks;
 use strict;
 use warnings;
