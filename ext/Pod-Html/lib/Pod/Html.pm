@@ -629,6 +629,9 @@ package Pod::Simple::XHTML::LocalPodLinks;
 use strict;
 use warnings;
 use parent 'Pod::Simple::XHTML';
+use Pod::Html::Auxiliary qw(
+    unixify
+);
 
 use File::Spec;
 use File::Spec::Unix;
@@ -692,7 +695,7 @@ sub resolve_pod_page_link {
         $path = $self->pages->{$to};
     }
 
-    my $url = File::Spec::Unix->catfile(Pod::Html::Auxiliary::unixify($self->htmlroot),
+    my $url = File::Spec::Unix->catfile(unixify($self->htmlroot),
                                         $path);
 
     if ($self->htmlfileurl ne '') {
@@ -700,7 +703,7 @@ sub resolve_pod_page_link {
         # $self->htmldir needs to be prepended to link to get the absolute path
         # that will be relativized
         $url = Pod::Html::Auxiliary::relativize_url(
-            File::Spec::Unix->catdir(Pod::Html::Auxiliary::unixify($self->htmldir), $url),
+            File::Spec::Unix->catdir(unixify($self->htmldir), $url),
             $self->htmlfileurl # already unixified
         );
     }
